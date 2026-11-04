@@ -1,4 +1,320 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#064e3b" />
+  <title>SolarMate Pakistan</title>
+  <link rel="manifest" href="/manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 select-none font-sans">
+  <div class="max-w-md mx-auto min-h-screen bg-slate-950 pb-24 flex flex-col justify-between border-x border-slate-800">
+    <div>
+      <!-- Top Header -->
+      <header class="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-900 p-4 border-b border-emerald-800/40 sticky top-0 z-20">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-bold text-white">☀️ SolarMate</span>
+              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">PK</span>
+            </div>
+            <p id="discoTitle" class="text-xs text-slate-400 mt-0.5">MEPCO (South Punjab)</p>
+          </div>
+          <button onclick="switchTab('inverter')" class="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border bg-emerald-500/15 border-emerald-500/40 text-emerald-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="connBadge">Inverter Live</span>
+          </button>
+        </div>
+        <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-400 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
+          <span id="syncStatus">📡 Synced 2s ago (Local Wi-Fi :8899)</span>
+          <span id="peakBadge" class="text-emerald-400 font-semibold">✅ OFF-PEAK</span>
+        </div>
+      </header>
+
+      <main class="p-4 space-y-4">
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="space-y-4">
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setScenario('sunny')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-amber-300 active:scale-95">☀️ Noon Surplus</button>
+            <button onclick="setScenario('peak')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-rose-300 active:scale-95">🌆 7PM Peak</button>
+            <button onclick="setScenario('smog')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-slate-300 active:scale-95">🌫️ Smog Day</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-3.5">
+              <span class="text-xs text-slate-400">Solar PV Generation</span>
+              <div id="valSolar" class="text-2xl font-bold text-amber-400 mt-1">6.4 kW</div>
+              <span class="text-[11px] text-slate-400">Daily Yield: 34.8 kWh</span>
+            </div>
+
+            <div class="bg-slate-900 border border-sky-500/30 rounded-2xl p-3.5">
+              <span class="text-xs text-slate-400">Home Load</span>
+              <div id="valLoad" class="text-2xl font-bold text-sky-400 mt-1">2.8 kW</div>
+              <span id="subLoad" class="text-[11px] text-slate-400">Base house load</span>
+            </div>
+
+            <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-3.5">
+              <span id="batLabel" class="text-xs text-slate-400">LiFePO4 Battery (10kWh)</span>
+              <div id="valBat" class="text-2xl font-bold text-emerald-400 mt-1">84%</div>
+              <span id="subBat" class="text-[11px] text-slate-400">Charging / Full</span>
+            </div>
+
+            <div class="bg-slate-900 border border-purple-500/30 rounded-2xl p-3.5">
+              <span class="text-xs text-slate-400">WAPDA Grid Flow</span>
+              <div id="valGrid" class="text-2xl font-bold mt-1 text-emerald-400">3.6 kW</div>
+              <span id="subGrid" class="text-[11px] text-slate-400">Exporting to WAPDA</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold">Zero Export to CT Mode</div>
+                <div class="text-xs text-slate-400">Blocks grid export if Net Metering is off</div>
+              </div>
+              <input id="chkZero" type="checkbox" onchange="updateUI()" class="w-5 h-5 accent-emerald-500" />
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+              <div>
+                <div class="text-sm font-semibold">Simulate WAPDA Peak Window</div>
+                <div class="text-xs text-slate-400">6:00 PM – 10:00 PM (Prioritize Battery)</div>
+              </div>
+              <input id="chkPeak" type="checkbox" onchange="updateUI()" class="w-5 h-5 accent-rose-500" />
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: CONNECT INVERTER -->
+        <section id="tab-inverter" class="hidden space-y-4">
+          <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
+            <h2 class="text-base font-bold text-white">🔌 Connect Your Solar Inverter</h2>
+            <p class="text-xs text-slate-400">Link your Wi-Fi dongle or 14-digit WAPDA reference number.</p>
+
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button onclick="setConnMode('cloud')" id="btnModeCloud" class="py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white">☁️ Cloud API</button>
+              <button onclick="setConnMode('local')" id="btnModeLocal" class="py-2 rounded-lg text-xs font-semibold text-slate-400">⚡ Local Wi-Fi</button>
+              <button onclick="setConnMode('wapda')" id="btnModeWapda" class="py-2 rounded-lg text-xs font-semibold text-slate-400">🧾 WAPDA Ref</button>
+            </div>
+
+            <div id="boxBrand">
+              <label class="text-xs text-slate-300 block mb-1">Select Inverter Brand</label>
+              <select id="invBrand" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+                <option>Deye / Inverex Nitrox / Knox (SOLARMAN API)</option>
+                <option>Solis Hybrid / On-Grid (SolisCloud API)</option>
+                <option>Growatt (ShinePhone API)</option>
+                <option>Crown / Maxpower / Ziewnic (SmartESS)</option>
+                <option>Huawei FusionSolar</option>
+              </select>
+            </div>
+
+            <div id="boxSn">
+              <label class="text-xs text-slate-300 block mb-1">Wi-Fi Dongle Serial Number (SN)</label>
+              <input id="inpSn" type="text" value="2308491024" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+            </div>
+
+            <div id="boxIp" class="hidden">
+              <label class="text-xs text-slate-300 block mb-1">Dongle Local IP Address (Port 8899)</label>
+              <input id="inpIp" type="text" value="192.168.100.145" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+            </div>
+
+            <div id="boxWapda" class="hidden">
+              <label class="text-xs text-slate-300 block mb-1">14-Digit WAPDA Reference Number</label>
+              <input id="inpWapda" type="text" maxlength="14" value="14151234567890" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-300 block mb-1">Battery Bank Capacity (kWh)</label>
+              <input id="inpBatKwh" type="number" value="10" onchange="updateUI()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+            </div>
+
+            <button onclick="saveInverter()" id="btnSaveInv" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs">
+              ✅ Save & Connect Inverter
+            </button>
+          </div>
+        </section>
+
+        <!-- TAB 3: WAPDA BILL PREDICTOR -->
+        <section id="tab-bill" class="hidden space-y-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400">Predicted Monthly WAPDA Bill</span>
+              <select id="selDisco" onchange="updateBill()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+                <option value="MEPCO">MEPCO (South Punjab)</option>
+                <option value="LESCO">LESCO (Lahore)</option>
+                <option value="IESCO">IESCO (Islamabad)</option>
+                <option value="FESCO">FESCO (Faisalabad)</option>
+                <option value="KE">K-Electric (Karachi)</option>
+              </select>
+            </div>
+            <div id="valBill" class="text-3xl font-extrabold text-emerald-400">Rs. 2,707</div>
+            <p class="text-[11px] text-slate-400">Includes Off-Peak 1:1 offset, Peak units, Net Metering credit & fixed taxes.</p>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <div class="flex justify-between text-xs mb-1"><span>Off-Peak Import</span><span id="lblOffPeak" class="text-sky-400 font-bold">220 kWh</span></div>
+                <input id="rngOffPeak" type="range" min="0" max="800" value="220" oninput="updateBill()" class="w-full accent-sky-400" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1"><span>Peak Import (6PM–10PM)</span><span id="lblPeak" class="text-rose-400 font-bold">65 kWh</span></div>
+                <input id="rngPeak" type="range" min="0" max="300" value="65" oninput="updateBill()" class="w-full accent-rose-400" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1"><span>Solar Exported Units</span><span id="lblExport" class="text-emerald-400 font-bold">310 kWh</span></div>
+                <input id="rngExport" type="range" min="0" max="1000" value="310" oninput="updateBill()" class="w-full accent-emerald-400" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: APPLIANCES -->
+        <section id="tab-appliances" class="hidden space-y-3">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
+            <h3 class="text-sm font-bold">⚡ Smart Heavy-Load Advisor</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Tap Test Run to simulate turning on heavy appliances:</p>
+          </div>
+          <div id="applianceContainer" class="space-y-2.5"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 grid grid-cols-4 py-2 px-2 z-30">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center text-[11px] py-1 text-emerald-400 font-bold"><span>🏠</span><span>Live</span></button>
+      <button onclick="switchTab('inverter')" id="nav-inverter" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>🔌</span><span>Inverter</span></button>
+      <button onclick="switchTab('bill')" id="nav-bill" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>🧾</span><span>Bill</span></button>
+      <button onclick="switchTab('appliances')" id="nav-appliances" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>❄️</span><span>Loads</span></button>
+    </nav>
+  </div>
+
+  <script>
+    let state = {
+      solarKw: 6.4,
+      baseLoadKw: 2.8,
+      batSoc: 84,
+      connMode: 'cloud',
+      appliances: [
+        { id: 'ac', name: '1.5 Ton Inverter AC', kw: 1.4, best: '9:30 AM – 4:00 PM', on: false },
+        { id: 'geyser', name: 'Electric Water Geyser', kw: 2.0, best: '11:00 AM – 2:30 PM', on: false },
+        { id: 'motor', name: '1 HP Water Pump Motor', kw: 0.8, best: '10:00 AM – 3:00 PM', on: false },
+        { id: 'iron', name: 'Heavy Steam Iron', kw: 1.2, best: '9:00 AM – 3:30 PM', on: false }
+      ]
+    };
+
+    function switchTab(tab) {
+      ['dashboard', 'inverter', 'bill', 'appliances'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('nav-' + t).className = t === tab
+          ? 'flex flex-col items-center text-[11px] py-1 text-emerald-400 font-bold'
+          : 'flex flex-col items-center text-[11px] py-1 text-slate-400';
+      });
+      renderAppliances();
+    }
+
+    function setScenario(type) {
+      if (type === 'sunny') { state.solarKw = 7.2; state.baseLoadKw = 2.4; state.batSoc = 92; document.getElementById('chkPeak').checked = false; }
+      if (type === 'peak')  { state.solarKw = 0.0; state.baseLoadKw = 3.1; state.batSoc = 78; document.getElementById('chkPeak').checked = true; }
+      if (type === 'smog')  { state.solarKw = 2.1; state.baseLoadKw = 2.6; state.batSoc = 45; document.getElementById('chkPeak').checked = false; }
+      updateUI();
+    }
+
+    function toggleAppliance(id) {
+      const item = state.appliances.find(a => a.id === id);
+      if (item) item.on = !item.on;
+      updateUI();
+      renderAppliances();
+    }
+
+    function renderAppliances() {
+      const box = document.getElementById('applianceContainer');
+      const isPeak = document.getElementById('chkPeak').checked;
+      const extra = state.appliances.reduce((s, a) => a.on ? s + a.kw : s, 0);
+      const net = state.solarKw - (state.baseLoadKw + extra);
+
+      box.innerHTML = state.appliances.map(app => {
+        const free = net >= app.kw && !isPeak;
+        const badgeText = isPeak ? 'AVOID (WAPDA Peak Hours)' : (free ? 'RUN NOW (100% Free Solar)' : 'Uses Battery / Grid');
+        const badgeClass = isPeak ? 'bg-rose-500/20 text-rose-300' : (free ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300');
+        const btnClass = app.on ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300';
+        return '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">' +
+          '<div><div class="text-sm font-semibold">' + app.name + ' (' + app.kw + ' kW)</div>' +
+          '<div class="text-[11px] text-slate-400">Best Window: ' + app.best + '</div>' +
+          '<span class="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ' + badgeClass + '">' + badgeText + '</span></div>' +
+          '<button onclick="toggleAppliance(\'' + app.id + '\')" class="px-3 py-2 rounded-xl text-xs font-bold ' + btnClass + '">' +
+          (app.on ? 'Running' : 'Test Run') + '</button></div>';
+      }).join('');
+    }
+
+    function updateUI() {
+      const extra = state.appliances.reduce((s, a) => a.on ? s + a.kw : s, 0);
+      const totalLoad = +(state.baseLoadKw + extra).toFixed(1);
+      const net = +(state.solarKw - totalLoad).toFixed(1);
+      const isZero = document.getElementById('chkZero').checked;
+      const isPeak = document.getElementById('chkPeak').checked;
+      const batKwh = document.getElementById('inpBatKwh').value || 10;
+
+      document.getElementById('valSolar').innerText = state.solarKw.toFixed(1) + ' kW';
+      document.getElementById('valLoad').innerText = totalLoad.toFixed(1) + ' kW';
+      document.getElementById('subLoad').innerText = extra > 0 ? 'Includes +' + extra.toFixed(1) + 'kW test load' : 'Base house load';
+      document.getElementById('batLabel').innerText = 'LiFePO4 Battery (' + batKwh + 'kWh)';
+      document.getElementById('valBat').innerText = state.batSoc + '%';
+      document.getElementById('subBat').innerText = net >= 0 ? 'Charging / Full' : 'Discharging to Home';
+
+      document.getElementById('valGrid').innerText = isZero ? '0.0 kW' : Math.abs(net).toFixed(1) + ' kW';
+      document.getElementById('subGrid').innerText = isZero ? 'Zero-Export Active' : (net >= 0 ? 'Exporting to WAPDA' : 'Importing / Battery Cover');
+
+      const peakBadge = document.getElementById('peakBadge');
+      peakBadge.innerText = isPeak ? '⚠️ WAPDA PEAK' : '✅ OFF-PEAK';
+      peakBadge.className = isPeak ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold';
+    }
+
+    function setConnMode(mode) {
+      state.connMode = mode;
+      document.getElementById('btnModeCloud').className = mode === 'cloud' ? 'py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white' : 'py-2 rounded-lg text-xs font-semibold text-slate-400';
+      document.getElementById('btnModeLocal').className = mode === 'local' ? 'py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white' : 'py-2 rounded-lg text-xs font-semibold text-slate-400';
+      document.getElementById('btnModeWapda').className = mode === 'wapda' ? 'py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white' : 'py-2 rounded-lg text-xs font-semibold text-slate-400';
+
+      document.getElementById('boxBrand').classList.toggle('hidden', mode === 'wapda');
+      document.getElementById('boxSn').classList.toggle('hidden', mode === 'wapda');
+      document.getElementById('boxIp').classList.toggle('hidden', mode !== 'local');
+      document.getElementById('boxWapda').classList.toggle('hidden', mode !== 'wapda');
+    }
+
+    function saveInverter() {
+      const sn = document.getElementById('inpSn').value;
+      const ip = document.getElementById('inpIp').value;
+      const ref = document.getElementById('inpWapda').value;
+      if (state.connMode === 'local') document.getElementById('syncStatus').innerText = '📡 Live 1s Polling (' + ip + ':8899)';
+      else if (state.connMode === 'cloud') document.getElementById('syncStatus').innerText = '📡 Cloud Linked (SN: ' + sn + ')';
+      else document.getElementById('syncStatus').innerText = '📡 WAPDA Ref #' + ref.slice(0, 7) + '...';
+      switchTab('dashboard');
+      updateUI();
+    }
+
+    function updateBill() {
+      const disco = document.getElementById('selDisco').value;
+      document.getElementById('discoTitle').innerText = disco + ' Pakistan';
+      const off = +document.getElementById('rngOffPeak').value;
+      const peak = +document.getElementById('rngPeak').value;
+      const exp = +document.getElementById('rngExport').value;
+
+      document.getElementById('lblOffPeak').innerText = off + ' kWh';
+      document.getElementById('lblPeak').innerText = peak + ' kWh';
+      document.getElementById('lblExport').innerText = exp + ' kWh';
+
+      const netOff = Math.max(0, off - exp);
+      const surplusCredit = Math.max(0, exp - off) * 22;
+      const total = Math.round((netOff * 42.5) + (peak * 49.8) - surplusCredit + 1450);
+      document.getElementById('valBill').innerText = 'Rs. ' + total.toLocaleString();
+    }
+
+    updateUI();
+    updateBill();
+    renderAppliances();
+  </script>
+</body>
+</html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
