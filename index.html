@@ -26,6 +26,317 @@
     };
 
     const INVERTER_BRANDS = [
+      { id: "deye_inverex", name: "Deye / Inverex Nitrox / Knox", platform: "SOLARMAN Smart API" },
+      { id: "solis", name: "Solis Hybrid / On-Grid", platform: "SolisCloud API" },
+      { id: "growatt", name: "Growatt", platform: "ShinePhone API" },
+      { id: "voltronic", name: "Crown / Maxpower / Ziewnic", platform: "SmartESS / DessMonitor" },
+      { id: "huawei", name: "Huawei FusionSolar", platform: "FusionSolar API" }
+    ];
+
+    function SolarMateApp() {
+      const [activeTab, setActiveTab] = useState("dashboard");
+      const [disco, setDisco] = useState("MEPCO");
+
+      const [solarKw, setSolarKw] = useState(6.4);
+      const [loadKw, setLoadKw] = useState(2.8);
+      const [batterySoc, setBatterySoc] = useState(84);
+      const [batteryCapacityKwh, setBatteryCapacityKwh] = useState(10);
+      const [isPeakHour, setIsPeakHour] = useState(false);
+      const [zeroExportMode, setZeroExportMode] = useState(false);
+
+      const [connMethod, setConnMethod] = useState("cloud");
+      const [selectedBrand, setSelectedBrand] = useState("deye_inverex");
+      const [loggerSn, setLoggerSn] = useState("2308491024");
+      const [accountId, setAccountId] = useState("");
+      const [localIp, setLocalIp] = useState("192.168.100.145");
+      const [wapdaRef, setWapdaRef] = useState("14151234567890");
+      const [isConnected, setIsConnected] = useState(true);
+      const [isSyncing, setIsSyncing] = useState(false);
+      const [lastSyncText, setLastSyncText] = useState("Synced 4s ago via Local Wi-Fi");
+
+      const [offPeakImport, setOffPeakImport] = useState(220);
+      const [peakImport, setPeakImport] = useState(65);
+      const [solarExport, setSolarExport] = useState(310);
+
+      const [activeAppliances, setActiveAppliances] = useState({
+        ac: false, geyser: false, motor: false, iron: false
+      });
+
+      const appliancesList = [
+        { id: "ac", name: "1.5 Ton Inverter AC", kw: 1.4, bestTime: "9:30 AM – 4:00 PM" },
+        { id: "geyser", name: "Electric Water Geyser", kw: 2.0, bestTime: "11:00 AM – 2:30 PM" },
+        { id: "motor", name: "1 HP Water Pump Motor", kw: 0.8, bestTime: "10:00 AM – 3:00 PM" },
+        { id: "iron", name: "Heavy Steam Iron", kw: 1.2, bestTime: "9:00 AM – 3:30 PM" }
+      ];
+
+      const extraLoad = useMemo(() => {
+        return appliancesList.reduce((sum, item) => activeAppliances[item.id] ? sum + item.kw : sum, 0);
+      }, [activeAppliances]);
+
+      const totalLoadKw = +(loadKw + extraLoad).toFixed(2);
+      const netPower = +(solarKw - totalLoadKw).toFixed(2);
+
+      const currentDisco = DISCOS[disco];
+      const netOffPeakUnits = Math.max(0, offPeakImport - solarExport);
+      const exportCreditSurplus = Math.max(0, solarExport - offPeakImport) * currentDisco.exportRate;
+      const peakCost = peakImport * currentDisco.peak;
+      const offPeakCost = netOffPeakUnits * currentDisco.offPeak;
+      const estimatedBill = Math.round(peakCost + offPeakCost - exportCreditSurplus + 1450);
+
+      const handleConnectInverter = (e) => {
+        e.preventDefault();
+        setIsSyncing(true);
+        setTimeout(() => {
+          setIsSyncing(false);
+          setIsConnected(true);
+          if (connMethod === "local") setLastSyncText(`Live 1s Polling (${localIp}:8899)`);
+          else if (connMethod === "cloud") setLastSyncText(`Cloud Linked (SN: ${loggerSn})`);
+          else setLastSyncText(`WAPDA Ref #${wapdaRef.slice(0, 6)}...`);
+          setActiveTab("dashboard");
+        }, 700);
+      };
+
+      const applyScenario = (type) => {
+        if (type === "sunny") { setSolarKw(7.2); setLoadKw(2.4); setBatterySoc(92); setIsPeakHour(false); }
+        if (type === "peak")  { setSolarKw(0.0); setLoadKw(3.1); setBatterySoc(78); setIsPeakHour(true); }
+        if (type === "smog")  { setSolarKw(2.1); setLoadKw(2.6); setBatterySoc(45); setIsPeakHour(false); }
+      };
+
+      return (
+        <div className="max-w-md mx-auto min-h-screen bg-slate-950 pb-24 flex flex-col justify-between border-x border-slate-800">
+          <div>
+            <header className="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-900 p-4 border-b border-emerald-800/40 sticky top-0 z-20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-white">☀️ SolarMate</span>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">PK</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">{currentDisco.name}</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("inverter")}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  {isConnected ? "Inverter Live" : "Connect"}
+                </button>
+              </div>
+              <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-400 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
+                <span>📡 {lastSyncText}</span>
+                <span className={isPeakHour ? "text-rose-400 font-semibold" : "text-emerald-400 font-semibold"}>
+                  {isPeakHour ? "⚠️ WAPDA PEAK" : "✅ OFF-PEAK"}
+                </span>
+              </div>
+            </header>
+
+            <main className="p-4 space-y-4">
+              {activeTab === "dashboard" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    <button onClick={() => applyScenario("sunny")} className="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-amber-300">☀️ Noon Surplus</button>
+                    <button onClick={() => applyScenario("peak")} className="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-rose-300">🌆 7PM Peak</button>
+                    <button onClick={() => applyScenario("smog")} className="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-slate-300">🌫️ Smog Day</button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-3.5">
+                      <span className="text-xs text-slate-400">Solar PV Generation</span>
+                      <div className="text-2xl font-bold text-amber-400 mt-1">{solarKw.toFixed(1)} kW</div>
+                      <span className="text-[11px] text-slate-400">Daily Yield: 34.8 kWh</span>
+                    </div>
+
+                    <div className="bg-slate-900 border border-sky-500/30 rounded-2xl p-3.5">
+                      <span className="text-xs text-slate-400">Home Load</span>
+                      <div className="text-2xl font-bold text-sky-400 mt-1">{totalLoadKw} kW</div>
+                      <span className="text-[11px] text-slate-400">
+                        {extraLoad > 0 ? `Includes +${extraLoad.toFixed(1)}kW test load` : "Base house load"}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-3.5">
+                      <span className="text-xs text-slate-400">Battery ({batteryCapacityKwh}kWh)</span>
+                      <div className="text-2xl font-bold text-emerald-400 mt-1">{batterySoc}%</div>
+                      <span className="text-[11px] text-slate-400">{netPower >= 0 ? "Charging / Full" : "Discharging"}</span>
+                    </div>
+
+                    <div className="bg-slate-900 border border-purple-500/30 rounded-2xl p-3.5">
+                      <span className="text-xs text-slate-400">WAPDA Grid Flow</span>
+                      <div className="text-2xl font-bold mt-1 text-emerald-400">
+                        {zeroExportMode ? "0.0 kW" : `${Math.abs(netPower).toFixed(1)} kW`}
+                      </div>
+                      <span className="text-[11px] text-slate-400">
+                        {zeroExportMode ? "Zero-Export Active" : netPower >= 0 ? "Exporting" : "Importing"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold">Zero Export Mode</div>
+                        <div className="text-xs text-slate-400">Blocks grid export via CT</div>
+                      </div>
+                      <input type="checkbox" checked={zeroExportMode} onChange={(e) => setZeroExportMode(e.target.checked)} className="w-5 h-5 accent-emerald-500" />
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                      <div>
+                        <div className="text-sm font-semibold">Simulate WAPDA Peak Window</div>
+                        <div className="text-xs text-slate-400">{currentDisco.peakWindow}</div>
+                      </div>
+                      <input type="checkbox" checked={isPeakHour} onChange={(e) => setIsPeakHour(e.target.checked)} className="w-5 h-5 accent-rose-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "inverter" && (
+                <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 space-y-3">
+                  <h2 className="text-base font-bold text-white">🔌 Connect Your Solar Inverter</h2>
+                  <div className="grid grid-cols-3 gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <button onClick={() => setConnMethod("cloud")} className={`py-2 rounded-lg text-xs font-semibold ${connMethod === "cloud" ? "bg-emerald-600 text-white" : "text-slate-400"}`}>☁️ Cloud API</button>
+                    <button onClick={() => setConnMethod("local")} className={`py-2 rounded-lg text-xs font-semibold ${connMethod === "local" ? "bg-emerald-600 text-white" : "text-slate-400"}`}>⚡ Local Wi-Fi</button>
+                    <button onClick={() => setConnMethod("wapda")} className={`py-2 rounded-lg text-xs font-semibold ${connMethod === "wapda" ? "bg-emerald-600 text-white" : "text-slate-400"}`}>🧾 WAPDA Ref</button>
+                  </div>
+
+                  <form onSubmit={handleConnectInverter} className="space-y-3">
+                    {connMethod !== "wapda" && (
+                      <div>
+                        <label className="text-xs text-slate-300 block mb-1">Inverter Brand</label>
+                        <select value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+                          {INVERTER_BRANDS.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.platform})</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    {connMethod === "cloud" && (
+                      <>
+                        <div>
+                          <label className="text-xs text-slate-300 block mb-1">Wi-Fi Dongle Serial Number (SN)</label>
+                          <input type="text" value={loggerSn} onChange={(e) => setLoggerSn(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" required />
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-300 block mb-1">Solarman / SolisCloud Email</label>
+                          <input type="email" value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder="yourname@gmail.com" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+                        </div>
+                      </>
+                    )}
+
+                    {connMethod === "local" && (
+                      <>
+                        <div>
+                          <label className="text-xs text-slate-300 block mb-1">Dongle Local IP (Port 8899)</label>
+                          <input type="text" value={localIp} onChange={(e) => setLocalIp(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" required />
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-300 block mb-1">Logger Serial Number</label>
+                          <input type="text" value={loggerSn} onChange={(e) => setLoggerSn(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" required />
+                        </div>
+                      </>
+                    )}
+
+                    {connMethod === "wapda" && (
+                      <div>
+                        <label className="text-xs text-slate-300 block mb-1">14-Digit WAPDA Reference Number</label>
+                        <input type="text" maxLength="14" value={wapdaRef} onChange={(e) => setWapdaRef(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" required />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-xs text-slate-300 block mb-1">Battery Capacity (kWh)</label>
+                      <input type="number" value={batteryCapacityKwh} onChange={(e) => setBatteryCapacityKwh(Number(e.target.value))} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+                    </div>
+
+                    <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs">
+                      {isSyncing ? "Connecting..." : "✅ Save & Connect Inverter"}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {activeTab === "bill" && (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-400">Predicted Monthly WAPDA Bill</span>
+                    <select value={disco} onChange={(e) => setDisco(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs">
+                      {Object.keys(DISCOS).map((k) => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </div>
+                  <div className="text-3xl font-extrabold text-white">Rs. {estimatedBill.toLocaleString()}</div>
+                  <div className="space-y-3 pt-2">
+                    <div>
+                      <div className="flex justify-between text-xs mb-1"><span>Off-Peak Import</span><span className="text-sky-400 font-bold">{offPeakImport} kWh</span></div>
+                      <input type="range" min="0" max="800" value={offPeakImport} onChange={(e) => setOffPeakImport(+e.target.value)} className="w-full accent-sky-400" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs mb-1"><span>Peak Import (6PM–10PM)</span><span className="text-rose-400 font-bold">{peakImport} kWh</span></div>
+                      <input type="range" min="0" max="300" value={peakImport} onChange={(e) => setPeakImport(+e.target.value)} className="w-full accent-rose-400" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs mb-1"><span>Solar Exported</span><span className="text-emerald-400 font-bold">{solarExport} kWh</span></div>
+                      <input type="range" min="0" max="1000" value={solarExport} onChange={(e) => setSolarExport(+e.target.value)} className="w-full accent-emerald-400" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "appliances" && (
+                <div className="space-y-3">
+                  {appliancesList.map((app) => {
+                    const canRunFree = netPower >= app.kw && !isPeakHour;
+                    return (
+                      <div key={app.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-semibold">{app.name} ({app.kw} kW)</div>
+                          <div className="text-[11px] text-slate-400">Best: {app.bestTime}</div>
+                          <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                            {isPeakHour ? "AVOID (Peak Hours)" : canRunFree ? "RUN NOW (Free Solar)" : "Uses Battery/Grid"}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setActiveAppliances((p) => ({ ...p, [app.id]: !p[app.id] }))}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold ${activeAppliances[app.id] ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"}`}
+                        >
+                          {activeAppliances[app.id] ? "Running" : "Test Run"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </main>
+          </div>
+
+          <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 grid grid-cols-4 py-2 px-2 z-30">
+            <button onClick={() => setActiveTab("dashboard")} className={`flex flex-col items-center text-[11px] py-1 ${activeTab === "dashboard" ? "text-emerald-400 font-bold" : "text-slate-400"}`}><span>🏠</span><span>Live</span></button>
+            <button onClick={() => setActiveTab("inverter")} className={`flex flex-col items-center text-[11px] py-1 ${activeTab === "inverter" ? <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#064e3b" />
+  <title>SolarMate Pakistan</title>
+  <link rel="manifest" href="/manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 select-none">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    const DISCOS = {
+      MEPCO: { name: "MEPCO (South Punjab)", offPeak: 42.5, peak: 49.8, exportRate: 22.0, peakWindow: "6:00 PM – 10:00 PM" },
+      LESCO: { name: "LESCO (Lahore/Central)", offPeak: 41.9, peak: 49.2, exportRate: 22.0, peakWindow: "6:00 PM – 10:00 PM" },
+      IESCO: { name: "IESCO (Islamabad)", offPeak: 41.2, peak: 48.5, exportRate: 22.0, peakWindow: "6:00 PM – 10:00 PM" },
+      FESCO: { name: "FESCO (Faisalabad)", offPeak: 41.8, peak: 49.0, exportRate: 22.0, peakWindow: "6:00 PM – 10:00 PM" },
+      KE:    { name: "K-Electric (Karachi)", offPeak: 44.0, peak: 51.5, exportRate: 21.5, peakWindow: "6:30 PM – 10:30 PM" }
+    };
+
+    const INVERTER_BRANDS = [
       { id: "deye_inverex", name: "Deye / Inverex Nitrox / Knox", platform: "SOLARMAN Smart API", port: "8899 (LSW-3 Stick)" },
       { id: "solis", name: "Solis Hybrid / On-Grid", platform: "SolisCloud API", port: "8899 (S3-WiFi-ST)" },
       { id: "growatt", name: "Growatt", platform: "ShinePhone API", port: "5279 (ShineWiFi-X)" },
