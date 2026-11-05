@@ -11,7 +11,6 @@
 <body class="bg-slate-950 text-slate-100 select-none font-sans">
   <div class="max-w-md mx-auto min-h-screen bg-slate-950 pb-24 flex flex-col justify-between border-x border-slate-800">
     <div>
-      <!-- Top Header -->
       <header class="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-900 p-4 border-b border-emerald-800/40 sticky top-0 z-20">
         <div class="flex items-center justify-between">
           <div>
@@ -21,7 +20,7 @@
             </div>
             <p id="discoTitle" class="text-xs text-slate-400 mt-0.5">LESCO (Lahore/Central)</p>
           </div>
-          <button onclick="switchTab('inverter')" id="connBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border bg-slate-800 border-slate-700 text-slate-300">
+          <button type="button" onclick="switchTab('inverter')" id="connBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border bg-slate-800 border-slate-700 text-slate-300">
             <span id="connDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
             <span id="connBadge">No Logger</span>
           </button>
@@ -33,16 +32,12 @@
       </header>
 
       <main class="p-4 space-y-4">
-        <!-- TAB 1: DASHBOARD (MANUAL SIMULATOR) -->
+        <!-- TAB 1: LIVE -->
         <section id="tab-dashboard" class="space-y-4">
-          <div class="bg-slate-900/70 border border-slate-800 rounded-xl px-3 py-2 text-[11px] text-slate-400">
-            💡 <strong class="text-slate-200">Manual Simulator Mode:</strong> Adjust sliders or tap presets below to simulate solar load and battery behavior.
-          </div>
-
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="setScenario('sunny')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-amber-300 active:scale-95">☀️ Noon Surplus</button>
-            <button onclick="setScenario('peak')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-rose-300 active:scale-95">🌆 7PM Peak</button>
-            <button onclick="setScenario('smog')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-slate-300 active:scale-95">🌫️ Smog Day</button>
+            <button type="button" onclick="setScenario('sunny')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-amber-300">☀️ Noon Surplus</button>
+            <button type="button" onclick="setScenario('peak')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-rose-300">🌆 7PM Peak</button>
+            <button type="button" onclick="setScenario('smog')" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs font-medium text-slate-300">🌫️ Smog Day</button>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -51,19 +46,16 @@
               <div id="valSolar" class="text-2xl font-bold text-amber-400 mt-1">6.4 kW</div>
               <input id="rngSolar" type="range" min="0" max="12" step="0.1" value="6.4" oninput="onSliderChange()" class="w-full accent-amber-400 mt-2" />
             </div>
-
             <div class="bg-slate-900 border border-sky-500/30 rounded-2xl p-3.5">
               <span class="text-xs text-slate-400">Home Load (Simulated)</span>
               <div id="valLoad" class="text-2xl font-bold text-sky-400 mt-1">2.8 kW</div>
               <input id="rngLoad" type="range" min="0.2" max="10" step="0.1" value="2.8" oninput="onSliderChange()" class="w-full accent-sky-400 mt-2" />
             </div>
-
             <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-3.5">
               <span id="batLabel" class="text-xs text-slate-400">LiFePO4 Battery (10kWh)</span>
               <div id="valBat" class="text-2xl font-bold text-emerald-400 mt-1">84%</div>
               <input id="rngBat" type="range" min="5" max="100" step="1" value="84" oninput="onSliderChange()" class="w-full accent-emerald-400 mt-2" />
             </div>
-
             <div class="bg-slate-900 border border-purple-500/30 rounded-2xl p-3.5">
               <span class="text-xs text-slate-400">Net Grid Flow</span>
               <div id="valGrid" class="text-2xl font-bold mt-1 text-emerald-400">3.6 kW</div>
@@ -73,32 +65,24 @@
 
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <div>
-                <div class="text-sm font-semibold">Zero Export to CT Mode</div>
-                <div class="text-xs text-slate-400">Blocks grid export if Net Metering is off</div>
-              </div>
+              <span class="text-sm font-semibold">Zero Export to CT Mode</span>
               <input id="chkZero" type="checkbox" onchange="onControlChange()" class="w-5 h-5 accent-emerald-500" />
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-800">
-              <div>
-                <div class="text-sm font-semibold">WAPDA Peak Window</div>
-                <div class="text-xs text-slate-400">6:00 PM – 10:00 PM (Prioritize Battery)</div>
-              </div>
+              <span class="text-sm font-semibold">WAPDA Peak Window (6PM–10PM)</span>
               <input id="chkPeak" type="checkbox" onchange="onControlChange()" class="w-5 h-5 accent-rose-500" />
             </div>
           </div>
         </section>
 
-        <!-- TAB 2: LOGGER & INVERTER CONFIGURATION -->
+        <!-- TAB 2: INVERTER / LOGGER -->
         <section id="tab-inverter" class="hidden space-y-4">
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
               <h2 class="text-base font-bold text-white">🔌 Logger & System Profile</h2>
               <span id="cfgStatusPill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Not Configured</span>
             </div>
-            <p class="text-xs text-slate-400">
-              Save your logger and inverter serial numbers locally on this device. (Note: Saving an SN stores your hardware profile; live SOLARMAN telemetry is not connected in this manual MVP.)
-            </p>
+            <p class="text-xs text-slate-400">Save or delete your logger serial number locally on this phone (Manual Mode).</p>
 
             <div>
               <label class="text-xs text-slate-300 block mb-1">Your DISCO Region</label>
@@ -129,17 +113,13 @@
             <div id="feedbackMsg" class="hidden text-xs font-medium px-3 py-2 rounded-xl"></div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" onclick="saveLoggerConfig()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-3 rounded-xl text-xs">
-                💾 Save / Update Logger
-              </button>
-              <button type="button" onclick="deleteLoggerConfig()" id="btnDeleteLogger" class="bg-rose-950/60 hover:bg-rose-900/70 border border-rose-700/50 active:scale-95 text-rose-300 font-bold py-3 rounded-xl text-xs">
-                🗑️ Delete Logger
-              </button>
+              <button type="button" onclick="saveLoggerConfig()" class="bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs">💾 Save Logger</button>
+              <button type="button" onclick="deleteLoggerConfig()" id="btnDeleteLogger" class="bg-rose-950/60 border border-rose-700/50 text-rose-300 font-bold py-3 rounded-xl text-xs">🗑️ Delete Logger</button>
             </div>
           </div>
         </section>
 
-        <!-- TAB 3: WAPDA BILL PREDICTOR -->
+        <!-- TAB 3: BILL -->
         <section id="tab-bill" class="hidden space-y-4">
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
             <div class="flex justify-between items-center">
@@ -147,8 +127,6 @@
               <span id="billDiscoTag" class="text-xs font-bold text-emerald-400">LESCO</span>
             </div>
             <div id="valBill" class="text-3xl font-extrabold text-emerald-400">Rs. 2,668</div>
-            <p class="text-[11px] text-slate-400">Includes Off-Peak 1:1 offset, Peak units, Net Metering credit & fixed taxes.</p>
-
             <div class="space-y-3 pt-2">
               <div>
                 <div class="flex justify-between text-xs mb-1"><span>Off-Peak Import</span><span id="lblOffPeak" class="text-sky-400 font-bold">220 kWh</span></div>
@@ -166,113 +144,71 @@
           </div>
         </section>
 
-        <!-- TAB 4: APPLIANCES -->
+        <!-- TAB 4: LOADS -->
         <section id="tab-appliances" class="hidden space-y-3">
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
-            <h3 class="text-sm font-bold">⚡ Smart Heavy-Load Advisor</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Tap Test Run to simulate turning on heavy appliances:</p>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+            <div><div class="text-sm font-semibold">1.5 Ton Inverter AC (1.4 kW)</div><div class="text-[11px] text-slate-400">9:30 AM – 4:00 PM</div></div>
+            <button type="button" id="btn-ac" onclick="toggleApp('ac')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">Test Run</button>
           </div>
-          <div id="applianceContainer" class="space-y-2.5"></div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+            <div><div class="text-sm font-semibold">Electric Water Geyser (2.0 kW)</div><div class="text-[11px] text-slate-400">11:00 AM – 2:30 PM</div></div>
+            <button type="button" id="btn-geyser" onclick="toggleApp('geyser')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">Test Run</button>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+            <div><div class="text-sm font-semibold">1 HP Water Motor (0.8 kW)</div><div class="text-[11px] text-slate-400">10:00 AM – 3:00 PM</div></div>
+            <button type="button" id="btn-motor" onclick="toggleApp('motor')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">Test Run</button>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+            <div><div class="text-sm font-semibold">Heavy Steam Iron (1.2 kW)</div><div class="text-[11px] text-slate-400">9:00 AM – 3:30 PM</div></div>
+            <button type="button" id="btn-iron" onclick="toggleApp('iron')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">Test Run</button>
+          </div>
         </section>
       </main>
     </div>
 
-    <!-- Bottom Nav -->
     <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 border-t border-slate-800 grid grid-cols-4 py-2 px-2 z-30">
-      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center text-[11px] py-1 text-emerald-400 font-bold"><span>🏠</span><span>Live</span></button>
-      <button onclick="switchTab('inverter')" id="nav-inverter" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>🔌</span><span>Inverter</span></button>
-      <button onclick="switchTab('bill')" id="nav-bill" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>🧾</span><span>Bill</span></button>
-      <button onclick="switchTab('appliances')" id="nav-appliances" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>❄️</span><span>Loads</span></button>
+      <button type="button" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center text-[11px] py-1 text-emerald-400 font-bold"><span>🏠</span><span>Live</span></button>
+      <button type="button" onclick="switchTab('inverter')" id="nav-inverter" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>🔌</span><span>Inverter</span></button>
+      <button type="button" onclick="switchTab('bill')" id="nav-bill" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>🧾</span><span>Bill</span></button>
+      <button type="button" onclick="switchTab('appliances')" id="nav-appliances" class="flex flex-col items-center text-[11px] py-1 text-slate-400"><span>❄️</span><span>Loads</span></button>
     </nav>
   </div>
 
   <script>
-    const STORAGE_KEY = 'solarmate_pk_config_v3';
+    const KEY = 'solarmate_pk_config_v3';
+    const DISCOS = { LESCO: 'LESCO (Lahore/Central)', MEPCO: 'MEPCO (South Punjab)', IESCO: 'IESCO (Islamabad)', FESCO: 'FESCO (Faisalabad)', KE: 'K-Electric (Karachi)' };
+    const state = { disco: 'LESCO', loggerSn: '', invSn: '', batKwh: 10, solarKw: 6.4, baseLoadKw: 2.8, batSoc: 84, offPeak: 220, peak: 65, exp: 310, zero: false, isPeak: false, loads: { ac: false, geyser: false, motor: false, iron: false } };
+    const weights = { ac: 1.4, geyser: 2.0, motor: 0.8, iron: 1.2 };
 
-    const DISCO_NAMES = {
-      LESCO: 'LESCO (Lahore/Central)',
-      MEPCO: 'MEPCO (South Punjab)',
-      IESCO: 'IESCO (Islamabad)',
-      FESCO: 'FESCO (Faisalabad)',
-      KE: 'K-Electric (Karachi)'
+    window.switchTab = function(tab) {
+      ['dashboard', 'inverter', 'bill', 'appliances'].forEach(function(t) {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('nav-' + t).className = t === tab ? 'flex flex-col items-center text-[11px] py-1 text-emerald-400 font-bold' : 'flex flex-col items-center text-[11px] py-1 text-slate-400';
+      });
     };
 
-    // Default application state: loggerSn and invSn start empty (no fake hardcoded logger)
-    const state = {
-      disco: 'LESCO',
-      loggerSn: '',
-      invSn: '',
-      isVerifiedConnection: false, // Honest flag: false until real telemetry API exists
-      batKwh: 10,
-      solarKw: 6.4,
-      baseLoadKw: 2.8,
-      batSoc: 84,
-      offPeak: 220,
-      peak: 65,
-      exp: 310,
-      zero: false,
-      isPeak: false,
-      appliances: [
-        { id: 'ac', name: '1.5 Ton Inverter AC', kw: 1.4, best: '9:30 AM – 4:00 PM', on: false },
-        { id: 'geyser', name: 'Electric Water Geyser', kw: 2.0, best: '11:00 AM – 2:30 PM', on: false },
-        { id: 'motor', name: '1 HP Water Pump Motor', kw: 0.8, best: '10:00 AM – 3:00 PM', on: false },
-        { id: 'iron', name: 'Heavy Steam Iron', kw: 1.2, best: '9:00 AM – 3:30 PM', on: false }
-      ]
-    };
+    function persist() {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    }
 
-    // Safely load persisted state from localStorage on startup
-    function loadSavedSettings() {
+    function loadSaved() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-
-        const saved = JSON.parse(raw);
-        if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) {
-          throw new Error('Corrupted storage format');
+        const s = JSON.parse(localStorage.getItem(KEY));
+        if (s && typeof s === 'object') {
+          if (DISCOS[s.disco]) state.disco = s.disco;
+          if (typeof s.loggerSn === 'string') state.loggerSn = s.loggerSn.trim();
+          if (typeof s.invSn === 'string') state.invSn = s.invSn.trim();
+          if (Number(s.batKwh) > 0) state.batKwh = Number(s.batKwh);
+          if (typeof s.solarKw === 'number') state.solarKw = s.solarKw;
+          if (typeof s.baseLoadKw === 'number') state.baseLoadKw = s.baseLoadKw;
+          if (typeof s.batSoc === 'number') state.batSoc = s.batSoc;
+          if (typeof s.offPeak === 'number') state.offPeak = s.offPeak;
+          if (typeof s.peak === 'number') state.peak = s.peak;
+          if (typeof s.exp === 'number') state.exp = s.exp;
+          if (typeof s.zero === 'boolean') state.zero = s.zero;
+          if (typeof s.isPeak === 'boolean') state.isPeak = s.isPeak;
         }
-
-        if (typeof saved.disco === 'string' && DISCO_NAMES[saved.disco]) {
-          state.disco = saved.disco;
-        }
-        if (typeof saved.loggerSn === 'string') {
-          state.loggerSn = saved.loggerSn.trim();
-        }
-        if (typeof saved.invSn === 'string') {
-          state.invSn = saved.invSn.trim();
-        }
-        if (typeof saved.batKwh === 'number' && !isNaN(saved.batKwh) && saved.batKwh > 0) {
-          state.batKwh = saved.batKwh;
-        }
-        if (typeof saved.solarKw === 'number' && !isNaN(saved.solarKw)) {
-          state.solarKw = saved.solarKw;
-        }
-        if (typeof saved.baseLoadKw === 'number' && !isNaN(saved.baseLoadKw)) {
-          state.baseLoadKw = saved.baseLoadKw;
-        }
-        if (typeof saved.batSoc === 'number' && !isNaN(saved.batSoc)) {
-          state.batSoc = saved.batSoc;
-        }
-        if (typeof saved.offPeak === 'number' && !isNaN(saved.offPeak)) {
-          state.offPeak = saved.offPeak;
-        }
-        if (typeof saved.peak === 'number' && !isNaN(saved.peak)) {
-          state.peak = saved.peak;
-        }
-        if (typeof saved.exp === 'number' && !isNaN(saved.exp)) {
-          state.exp = saved.exp;
-        }
-        if (typeof saved.zero === 'boolean') {
-          state.zero = saved.zero;
-        }
-        if (typeof saved.isPeak === 'boolean') {
-          state.isPeak = saved.isPeak;
-        }
-      } catch (err) {
-        console.warn('Clearing corrupted localStorage data:', err);
-        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-      }
-
-      // Hydrate DOM inputs from loaded state
+      } catch (e) { try { localStorage.removeItem(KEY); } catch (err) {} }
       document.getElementById('selDisco').value = state.disco;
       document.getElementById('inpSn').value = state.loggerSn;
       document.getElementById('inpInvSn').value = state.invSn;
@@ -287,80 +223,45 @@
       document.getElementById('chkPeak').checked = state.isPeak;
     }
 
-    function persistState() {
-      try {
-        const payload = {
-          disco: state.disco,
-          loggerSn: state.loggerSn,
-          invSn: state.invSn,
-          batKwh: state.batKwh,
-          solarKw: state.solarKw,
-          baseLoadKw: state.baseLoadKw,
-          batSoc: state.batSoc,
-          offPeak: state.offPeak,
-          peak: state.peak,
-          exp: state.exp,
-          zero: state.zero,
-          isPeak: state.isPeak
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      } catch (err) {
-        console.error('Failed to save to localStorage:', err);
-      }
-    }
-
-    function showFeedback(text, isError) {
-      const box = document.getElementById('feedbackMsg');
-      box.innerText = text;
-      box.className = isError
-        ? 'text-xs font-medium px-3 py-2 rounded-xl bg-rose-950/70 border border-rose-700/50 text-rose-200'
-        : 'text-xs font-medium px-3 py-2 rounded-xl bg-emerald-950/70 border border-emerald-700/50 text-emerald-200';
-      setTimeout(() => { box.classList.add('hidden'); }, 3500);
-    }
-
-    // Explicit Save / Edit handler for Logger SN
-    function saveLoggerConfig() {
-      const rawLoggerSn = document.getElementById('inpSn').value.trim();
-      const rawInvSn = document.getElementById('inpInvSn').value.trim();
-
-      if (!rawLoggerSn) {
-        showFeedback('Please enter a valid Logger Serial Number before saving.', true);
+    window.saveLoggerConfig = function() {
+      const sn = document.getElementById('inpSn').value.trim();
+      const msg = document.getElementById('feedbackMsg');
+      if (!sn) {
+        msg.innerText = 'Please enter a valid Logger SN.';
+        msg.className = 'text-xs font-medium px-3 py-2 rounded-xl bg-rose-950/70 text-rose-200';
         return;
       }
-
-      state.loggerSn = rawLoggerSn;
-      state.invSn = rawInvSn;
+      state.loggerSn = sn;
+      state.invSn = document.getElementById('inpInvSn').value.trim();
       state.disco = document.getElementById('selDisco').value;
       state.batKwh = Number(document.getElementById('inpBatKwh').value) || 10;
+      persist();
+      render();
+      msg.innerText = 'Saved Logger SN ' + sn + ' (Logger Configured).';
+      msg.className = 'text-xs font-medium px-3 py-2 rounded-xl bg-emerald-950/70 text-emerald-200';
+    };
 
-      persistState();
-      updateUI();
-      updateBill();
-      showFeedback('Logger SN ' + state.loggerSn + ' saved locally (Logger Configured).', false);
-    }
-
-    // Explicit Delete handler for Logger SN
-    function deleteLoggerConfig() {
+    window.deleteLoggerConfig = function() {
       state.loggerSn = '';
       state.invSn = '';
       document.getElementById('inpSn').value = '';
       document.getElementById('inpInvSn').value = '';
+      persist();
+      render();
+      const msg = document.getElementById('feedbackMsg');
+      msg.innerText = 'Logger removed from this device.';
+      msg.className = 'text-xs font-medium px-3 py-2 rounded-xl bg-slate-800 text-slate-300';
+    };
 
-      persistState();
-      updateUI();
-      showFeedback('Saved logger removed from this device.', false);
-    }
-
-    function onSliderChange() {
+    window.onSliderChange = function() {
       state.solarKw = +document.getElementById('rngSolar').value;
       state.baseLoadKw = +document.getElementById('rngLoad').value;
       state.batSoc = +document.getElementById('rngBat').value;
-      persistState();
-      updateUI();
-      renderAppliances();
-    }
+      persist();
+      render();
+    };
 
-    function onControlChange() {
+    window.onControlChange = function() {
       state.disco = document.getElementById('selDisco').value;
       state.batKwh = Number(document.getElementById('inpBatKwh').value) || 10;
       state.offPeak = +document.getElementById('rngOffPeak').value;
@@ -368,26 +269,47 @@
       state.exp = +document.getElementById('rngExport').value;
       state.zero = document.getElementById('chkZero').checked;
       state.isPeak = document.getElementById('chkPeak').checked;
-      persistState();
-      updateUI();
-      updateBill();
-      renderAppliances();
-    }
+      persist();
+      render();
+    };
 
-    function switchTab(tab) {
-      ['dashboard', 'inverter', 'bill', 'appliances'].forEach(t => {
-        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
-        document.getElementById('nav-' + t).className = t === tab
-          ? 'flex flex-col items-center text-[11px] py-1 text-emerald-400 font-bold'
-          : 'flex flex-col items-center text-[11px] py-1 text-slate-400';
-      });
-      renderAppliances();
-    }
-
-    function setScenario(type) {
+    window.setScenario = function(type) {
       if (type === 'sunny') { state.solarKw = 7.2; state.baseLoadKw = 2.4; state.batSoc = 92; state.isPeak = false; }
       if (type === 'peak')  { state.solarKw = 0.0; state.baseLoadKw = 3.1; state.batSoc = 78; state.isPeak = true; }
       if (type === 'smog')  { state.solarKw = 2.1; state.baseLoadKw = 2.6; state.batSoc = 45; state.isPeak = false; }
       document.getElementById('rngSolar').value = state.solarKw;
       document.getElementById('rngLoad').value = state.baseLoadKw;
-      document.
+      document.getElementById('rngBat').value = state.batSoc;
+      document.getElementById('chkPeak').checked = state.isPeak;
+      persist();
+      render();
+    };
+
+    window.toggleApp = function(id) {
+      state.loads[id] = !state.loads[id];
+      const btn = document.getElementById('btn-' + id);
+      btn.innerText = state.loads[id] ? 'Running' : 'Test Run';
+      btn.className = state.loads[id] ? 'px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white' : 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300';
+      render();
+    };
+
+    function render() {
+      const extra = Object.keys(weights).reduce(function(s, k) { return state.loads[k] ? s + weights[k] : s; }, 0);
+      const totalLoad = +(state.baseLoadKw + extra).toFixed(1);
+      const net = +(state.solarKw - totalLoad).toFixed(1);
+
+      document.getElementById('discoTitle').innerText = DISCOS[state.disco];
+      document.getElementById('billDiscoTag').innerText = state.disco;
+      document.getElementById('valSolar').innerText = state.solarKw.toFixed(1) + ' kW';
+      document.getElementById('valLoad').innerText = totalLoad.toFixed(1) + ' kW';
+      document.getElementById('batLabel').innerText = 'LiFePO4 Battery (' + state.batKwh + 'kWh)';
+      document.getElementById('valBat').innerText = state.batSoc + '%';
+      document.getElementById('valGrid').innerText = state.zero ? '0.0 kW' : Math.abs(net).toFixed(1) + ' kW';
+      document.getElementById('subGrid').innerText = state.zero ? 'Zero-Export Active' : (net >= 0 ? 'Exporting to ' + state.disco : 'Importing / Battery Cover');
+
+      const peakBadge = document.getElementById('peakBadge');
+      peakBadge.innerText = state.isPeak ? '⚠️ WAPDA PEAK' : '✅ OFF-PEAK';
+      peakBadge.className = state.isPeak ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold';
+
+      const hasSn = Boolean(state.loggerSn);
+      document.getElementById('connBadge').innerText = hasSn ? 'Logger Configured' : 'No Logger';
