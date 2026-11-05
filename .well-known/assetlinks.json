@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "pk.solarmate.app",
+        "sha256_cert_fingerprints": ["8D:31:27:F8:DC:46:26:4C:12:FC:90:A2:70:A1:E2:F0:07:46:5D:6C:B7:2B:12:FE:53:09:0A:65:DC:86:5B:E6"]
+      }
+    }]
